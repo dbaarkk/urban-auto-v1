@@ -3,12 +3,15 @@ import path from "node:path";
 const loaderPath = require.resolve('orchids-visual-edits/loader.js');
 
 const nextConfig: NextConfig = {
+  output: 'export',   // REQUIRED for static export (creates /out)
+
   experimental: {
     allowedDevOrigins: [
       "3000-ffa17f00-92c4-470c-9bea-15d74c82764d.orchids.cloud",
       "*.orchids.cloud"
     ]
   },
+
   images: {
     unoptimized: true,
     remotePatterns: [
@@ -22,13 +25,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
   outputFileTracingRoot: path.resolve(__dirname, '../../'),
+
   typescript: {
     ignoreBuildErrors: true,
   },
+
   eslint: {
     ignoreDuringBuilds: true,
   },
+
   turbopack: {
     rules: {
       "*.{jsx,tsx}": {
