@@ -19,9 +19,15 @@ workflows:
         script: |
           npm run build
 
-      - name: Sync Capacitor Android
-        script: |
-          npx cap sync android
+      - name: Ensure Android platform exists
+  script: |
+    if [ ! -d "android" ]; then
+      npx cap add android
+    fi
+
+- name: Sync Capacitor Android
+  script: |
+    npx cap sync android
 
       - name: Build Android (AAB + APK)
         script: |
