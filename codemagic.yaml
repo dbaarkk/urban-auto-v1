@@ -10,14 +10,15 @@ workflows:
         - supabase
 
     scripts:
-      - name: Install dependencies (clean)
+      - name: Install dependencies
         script: |
           rm -rf node_modules
           npm install
 
-      - name: Build Next.js
+      - name: Build Next.js (static export)
         script: |
           npm run build
+          npm run export
 
       - name: Ensure Android platform exists
         script: |
