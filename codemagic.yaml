@@ -1,22 +1,47 @@
 workflows:
-  generate-keystore:
-    name: Generate Upload Keystore
+  android-builds:
+    name: Urban Auto - Signed AAB
+    max_build_duration: 120
 
     environment:
+      node: 22
       java: 21
+      groups:
+        - supabase
 
     scripts:
-      - name: Generate keystore
+      - name: Install dependencies
         script: |
-          keytool -genkeypair \
-            -keystore upload-keystore.jks \
-            -alias upload \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 10000 \
-            -storepass android \
-            -keypass android \
-            -dname "CN=Urban Auto, OU=Mobile, O=UrbanAuto, L=City, S=State, C=IN"
+          rm -rf node_modules
+          npm install
+
+      - name: Build Next.js
+        script: |
+          npm run build
+
+      - name: Ensure Android platform exists
+        script: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: Sync Capacitor Android
+        script: |
+          npx cap sync android
+
+      - name: Set signing config
+        script: |
+          echo "storeFile=keystore.jks" >> android/key.properties
+          echo "storePassword=android" >> android/key.properties
+          echo "keyAlias=upload" >> android/key.properties
+          echo "keyPassword=android" >> android/key.properties
+
+      - name: Build Signed Release AAB
+        script: |
+          cd android
+          chmod +x gradlew
+          ./gradlew clean
+          ./gradlew bundleRelease
 
     artifacts:
-      - upload-keystore.jks
+      - android/app/build/outputs/bundle/release/*.aab
