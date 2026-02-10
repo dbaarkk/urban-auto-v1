@@ -1,6 +1,6 @@
 workflows:
   android-builds:
-    name: Urban Auto - AAB + APK (Debug + Release)
+    name: Urban Auto - Signed AAB
     max_build_duration: 120
 
     environment:
@@ -9,13 +9,16 @@ workflows:
       groups:
         - supabase
 
+    android_signing:
+      - keystore_reference
+
     scripts:
-      - name: Install dependencies
+      - name: Install dependencies (clean)
         script: |
           rm -rf node_modules
           npm install
 
-      - name: Build Next.js (static export)
+      - name: Build Next.js
         script: |
           npm run build
 
@@ -29,16 +32,12 @@ workflows:
         script: |
           npx cap sync android
 
-      - name: Build Android (AAB + APK)
+      - name: Build Android (Signed Release AAB)
         script: |
           cd android
           chmod +x gradlew
           ./gradlew clean
           ./gradlew bundleRelease
-          ./gradlew assembleDebug
-          ./gradlew assembleRelease
 
     artifacts:
       - android/app/build/outputs/bundle/release/*.aab
-      - android/app/build/outputs/apk/debug/*.apk
-      - android/app/build/outputs/apk/release/*.apk
