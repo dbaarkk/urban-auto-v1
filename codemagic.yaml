@@ -18,7 +18,6 @@ workflows:
       - name: Build Next.js (static export)
         script: |
           npm run build
-          npm run export
 
       - name: Ensure Android platform exists
         script: |
