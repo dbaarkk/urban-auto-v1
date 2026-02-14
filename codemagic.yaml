@@ -1,6 +1,6 @@
 workflows:
   android-builds:
-    name: Urban Auto - Signed APK + AAB (Manual Signing)
+    name: Urban Auto - FINAL Signed APK + AAB
     max_build_duration: 120
 
     environment:
@@ -14,7 +14,6 @@ workflows:
         script: |
           rm -rf node_modules
           npm install
-          npm install @capacitor/assets --save-dev
 
       - name: Build Next.js
         script: |
@@ -28,13 +27,14 @@ workflows:
 
       - name: Generate Android icons
         script: |
-          npx capacitor-assets generate --android
+          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+          cp resources/IMG-20260210-WA0024.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
       - name: Sync Capacitor Android
         script: |
           npx cap sync android
 
-      # --- SIGNING SETUP ---
+      # IMPORTANT — inject Codemagic keystore into Gradle
       - name: Inject keystore into Gradle
         script: |
           echo "MYAPP_UPLOAD_STORE_FILE=$CM_KEYSTORE_PATH" >> android/gradle.properties
@@ -42,18 +42,19 @@ workflows:
           echo "MYAPP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD" >> android/gradle.properties
           echo "MYAPP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD" >> android/gradle.properties
 
+      # FORCE release signing for BOTH AAB and APK
       - name: Enable release signing in build.gradle
         script: |
           sed -i '' 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/g' android/app/build.gradle || true
 
-      - name: Build Signed APK + AAB
+      - name: Build SIGNED APK + SIGNED AAB
         script: |
           cd android
           chmod +x gradlew
           ./gradlew clean
-          ./gradlew assembleRelease
           ./gradlew bundleRelease
+          ./gradlew assembleRelease
 
     artifacts:
-      - android/app/build/outputs/apk/release/*.apk
       - android/app/build/outputs/bundle/release/*.aab
+      - android/app/build/outputs/apk/release/*.apk
