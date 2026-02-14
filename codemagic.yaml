@@ -28,13 +28,12 @@ workflows:
 
       - name: Generate Android icons (adaptive)
         script: |
-          npx capacitor-assets generate --android
+          npx @capacitor/assets generate --android
 
       - name: Sync Capacitor Android
         script: |
           npx cap sync android
 
-      # --- Inject keystore from Codemagic ---
       - name: Inject keystore into Gradle
         script: |
           echo "MYAPP_UPLOAD_STORE_FILE=$CM_KEYSTORE_PATH" >> android/gradle.properties
@@ -42,8 +41,7 @@ workflows:
           echo "MYAPP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD" >> android/gradle.properties
           echo "MYAPP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD" >> android/gradle.properties
 
-      # --- Enable release signing ---
-      - name: Enable release signing in build.gradle
+      - name: Enable release signing
         script: |
           sed -i '' 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/g' android/app/build.gradle || true
 
