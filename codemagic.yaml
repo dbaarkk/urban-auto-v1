@@ -1,6 +1,6 @@
 workflows:
   android-builds:
-    name: Urban Auto - Signed APK + AAB (Stable)
+    name: Urban Auto - Signed APK + AAB (Manual Signing)
     max_build_duration: 120
 
     environment:
@@ -8,9 +8,6 @@ workflows:
       java: 21
       groups:
         - supabase
-
-    android_signing:
-      - keystore_reference
 
     scripts:
       - name: Install dependencies
@@ -29,13 +26,25 @@ workflows:
             npx cap add android
           fi
 
-      - name: Generate Android icons (adaptive)
+      - name: Generate Android icons
         script: |
           npx capacitor-assets generate --android
 
       - name: Sync Capacitor Android
         script: |
           npx cap sync android
+
+      # --- SIGNING SETUP ---
+      - name: Inject keystore into Gradle
+        script: |
+          echo "MYAPP_UPLOAD_STORE_FILE=$CM_KEYSTORE_PATH" >> android/gradle.properties
+          echo "MYAPP_UPLOAD_KEY_ALIAS=$CM_KEY_ALIAS" >> android/gradle.properties
+          echo "MYAPP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD" >> android/gradle.properties
+          echo "MYAPP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD" >> android/gradle.properties
+
+      - name: Enable release signing in build.gradle
+        script: |
+          sed -i '' 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/g' android/app/build.gradle || true
 
       - name: Build Signed APK + AAB
         script: |
