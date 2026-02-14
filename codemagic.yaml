@@ -26,11 +26,9 @@ workflows:
             npx cap add android
           fi
 
-      - name: Generate proper Android icon (adaptive)
+      - name: Generate Android icons (adaptive)
         script: |
-          npx capacitor-assets generate \
-            --icon resources/IMG-20260210-WA0024.png \
-            --android
+          npx capacitor-assets generate --android
 
       - name: Sync Capacitor Android
         script: |
