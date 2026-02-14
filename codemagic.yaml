@@ -1,6 +1,6 @@
 workflows:
   android-builds:
-    name: Urban Auto - Signed APK + AAB (Final Clean)
+    name: Urban Auto - Signed APK + AAB (Stable)
     max_build_duration: 120
 
     environment:
@@ -8,6 +8,9 @@ workflows:
       java: 21
       groups:
         - supabase
+
+    android_signing:
+      - keystore_reference
 
     scripts:
       - name: Install dependencies
@@ -34,30 +37,14 @@ workflows:
         script: |
           npx cap sync android
 
-      - name: Build Signed AAB
+      - name: Build Signed APK + AAB
         script: |
           cd android
           chmod +x gradlew
           ./gradlew clean
+          ./gradlew assembleRelease
           ./gradlew bundleRelease
 
-      - name: Generate Signed Universal APK (bundletool)
-        script: |
-          cd android
-
-          curl -L -o bundletool.jar https://github.com/google/bundletool/releases/download/1.15.6/bundletool-all-1.15.6.jar
-
-          java -jar bundletool.jar build-apks \
-            --bundle=app/build/outputs/bundle/release/app-release.aab \
-            --output=app-release.apks \
-            --mode=universal \
-            --ks=$CM_KEYSTORE_PATH \
-            --ks-key-alias=$CM_KEY_ALIAS \
-            --ks-pass=pass:$CM_KEYSTORE_PASSWORD \
-            --key-pass=pass:$CM_KEY_PASSWORD
-
-          unzip app-release.apks -d universal-apk
-
     artifacts:
-      - android/universal-apk/universal.apk
+      - android/app/build/outputs/apk/release/*.apk
       - android/app/build/outputs/bundle/release/*.aab
