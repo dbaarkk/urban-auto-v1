@@ -1,20 +1,25 @@
 workflows:
-  android-builds:
+  android-signed-build:
     name: Urban Auto - Signed APK + AAB
     max_build_duration: 120
 
     environment:
-      node: 22
+      node: 20
       java: 21
       groups:
         - supabase
 
-    scripts:
+    cache:
+      cache_paths:
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+        - ~/.npm
 
-      - name: Install dependencies
+    scripts:
+      - name: Clean install dependencies
         script: |
-          rm -rf node_modules
-          npm install
+          rm -rf node_modules package-lock.json
+          npm install --legacy-peer-deps
 
       - name: Build Next.js
         script: |
@@ -26,32 +31,29 @@ workflows:
             npx cap add android
           fi
 
-      - name: Generate Android icons (adaptive)
-        script: |
-          npx @capacitor/assets generate --android
-
-      - name: Sync Capacitor Android
+      - name: Sync Capacitor
         script: |
           npx cap sync android
 
-      - name: Inject keystore into Gradle
-        script: |
-          echo "MYAPP_UPLOAD_STORE_FILE=$CM_KEYSTORE_PATH" >> android/gradle.properties
-          echo "MYAPP_UPLOAD_KEY_ALIAS=$CM_KEY_ALIAS" >> android/gradle.properties
-          echo "MYAPP_UPLOAD_STORE_PASSWORD=$CM_KEYSTORE_PASSWORD" >> android/gradle.properties
-          echo "MYAPP_UPLOAD_KEY_PASSWORD=$CM_KEY_PASSWORD" >> android/gradle.properties
-
-      - name: Enable release signing
-        script: |
-          sed -i '' 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/g' android/app/build.gradle || true
-
-      - name: Build Signed APK + AAB
+      - name: Fix Gradle Wrapper (8.13)
         script: |
           cd android
+          rm -rf gradle/wrapper
+          gradle wrapper --gradle-version 8.13
           chmod +x gradlew
+          cd ..
+
+      - name: Build Signed Release APK + AAB
+        script: |
+          cd android
           ./gradlew clean
           ./gradlew assembleRelease
           ./gradlew bundleRelease
+
+      - name: Build Debug APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
 
     artifacts:
       - android/app/build/outputs/**/*.apk
