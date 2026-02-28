@@ -49,12 +49,15 @@ workflows:
           ./gradlew clean
           ./gradlew assembleRelease
           ./gradlew bundleRelease
+          cd ..
 
       - name: Build Debug APK
         script: |
           cd android
           ./gradlew assembleDebug
+          cd ..
 
     artifacts:
-      - android/app/build/outputs/**/*.apk
-      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/apk/debug/app-debug.apk
+      - android/app/build/outputs/apk/release/app-release.apk
+      - android/app/build/outputs/bundle/release/app-release.aab
